@@ -10,7 +10,7 @@ argo-cd:
       - --insecure
     ingress:
       enabled: true
-      ingressClassName: "alb"
+      ingressClassName: "nginx"
       hostname: "argocd.emzien.click"
       tls: true
       annotations:

@@ -31,22 +31,26 @@ releases:
   - name: post-init
     namespace: cert-manager
     chart: ./post-init
-  - chart: eks/aws-load-balancer-controller
-    namespace: kube-system
-    name: aws-load-balancer-controller
-    version: ~3.3.0
-    values:
-      - clusterName: eu-central-1
-        enableCertManager: true
-        certManager:
-          duration: "8760h0m0s" # 1 year
-          renewBefore: "720h0m0s" # 30 days
-          revisionHistoryLimit:
-        rootCert:
-          duration: "43800h0m0s" # 5 years
-        issuerRef:
-          name: letsencrypt-prod
-          kind: ClusterIssuer
+  - chart: ingress-nginx/ingress-nginx
+    namespace: nginx
+    name: nginx
+    version: ~4.10.0
+  # - chart: eks/aws-load-balancer-controller
+  #   namespace: kube-system
+  #   name: aws-load-balancer-controller
+  #   version: ~3.3.0
+  #   values:
+  #     - clusterName: eu-central-1
+  #       enableCertManager: true
+  #       certManager:
+  #         duration: "8760h0m0s" # 1 year
+  #         renewBefore: "720h0m0s" # 30 days
+  #         revisionHistoryLimit:
+  #       rootCert:
+  #         duration: "43800h0m0s" # 5 years
+  #       issuerRef:
+  #         name: letsencrypt-prod
+  #         kind: ClusterIssuer
   - name: external-dns
     namespace: kube-system
     chart: bitnami/external-dns
