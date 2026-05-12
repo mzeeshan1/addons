@@ -1,0 +1,156 @@
+environments:
+  default:
+    kubeContext: arn:aws:eks:eu-central-1:783149339345:cluster/eu-central-1
+
+repositories:
+  - name: stable
+    url: https://charts.helm.sh/stable
+  - name: eks
+    url: https://aws.github.io/eks-charts
+  - name: jetstack
+    url: https://charts.jetstack.io
+  - name: argocd
+    url: https://argoproj.github.io/argo-helm
+  - name: sealed-secrets
+    url: https://bitnami-labs.github.io/sealed-secrets
+  - name: "kubernetes-incubator"
+    url: "https://charts.helm.sh/incubator"
+releases:
+  - name: cert-manager
+    namespace: cert-manager
+    createNamespace: true
+    chart: jetstack/cert-manager
+    version: ~1.14.0
+    set:
+      - name: installCRDs
+        value: true
+    values:
+      - extraArgs:
+          - --dns01-recursive-nameservers-only
+          - --dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53
+  - name: post-init
+    namespace: cert-manager
+    chart: ./post-init
+  - chart: eks/aws-load-balancer-controller
+    namespace: kube-system
+    name: aws-load-balancer-controller
+    version: ~3.3.0
+    values:
+      - clusterName: eu-central-1
+        enableCertManager: true
+        certManager:
+          duration: "8760h0m0s" # 1 year
+          renewBefore: "720h0m0s" # 30 days
+          revisionHistoryLimit:
+        rootCert:
+          duration: "43800h0m0s" # 5 years
+        issuerRef:
+          name: letsencrypt-prod
+          kind: ClusterIssuer
+  - name: external-dns
+    namespace: kube-system
+    chart: bitnami/external-dns
+    version: 9.0.0
+    values:
+      - sources:
+          - service
+          - ingress
+          - pod
+        image:
+          registry: registry.k8s.io
+          repository: external-dns/external-dns
+          tag: v0.18.0
+        global:
+          security:
+            allowInsecureImages: true
+  - name: sealed-secrets-controller
+    namespace: kube-system
+    chart: sealed-secrets/sealed-secrets
+    version: 2.11.0
+  - name: sealed-secrets-key
+    namespace: kube-system
+    chart: "kubernetes-incubator/raw"
+    needs: ["kube-system/sealed-secrets-controller"]
+    version: "0.2.3"
+    wait: true
+    timeout: 120
+    cleanupOnFail: true
+    values:
+      - resources:
+          - apiVersion: v1
+            data:
+              tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVyVENDQXBXZ0F3SUJBZ0lRVTdxaGtOUXNWSWw3L24rSCtMaGhQVEFOQmdrcWhraUc5dzBCQVFzRkFEQUEKTUI0WERUSXhNRGt5T1RFeE16STFPVm9YRFRNeE1Ea3lOekV4TXpJMU9Wb3dBRENDQWlJd0RRWUpLb1pJaHZjTgpBUUVCQlFBRGdnSVBBRENDQWdvQ2dnSUJBS296eWFIc2UvV28yVzhrbWt6TkxqcGJBQzBnQ0ZtREZhWUhkeDRrCjlsSnlVTzNrZE1NTkR3UGhnaE03dm9tY2xmOGlyREIvMFpVTk1SQlpSOG1VRUVZZTdnM2pSL0pTVW0rdHZ6S1YKdjNzUmJHakc3VVBWcUsyVTZKbjNUeXBPR3UxbEtTMS9KcGhNeDlQYkdNWnpJZzRCLzhQQzBYWWtTNDVDSzk4WgpWQmwySTdwQ3hmVlN6VWZmVTdGOUVoUVFJdGU3Q1NZQzBQNHArWnFwTlh4UmI5YW93ZW1JUmM1SnR6VGxrV2NBCnNFTFdoNFoyZjQ2OVhJU1FVUHo1UFplZmZzanhGQWlvd0hFTzZyemdsUUFNbXVOWVlSMXNRTUhpK3YzOGpnTUYKdmFlY2w5ckQvdUFYVzNQUmU3WXlJcTRpUGZTN3dzOXAyU1VtQVZBRTJITHk0SU5IQWZMc0lwbW5TNzV2Qmk0Ygpad2RKL2FKM2Nvcy9wbmtOVFpENTVSKzJrYnZhUklldkxVY1lkV2xCNEVGVFJnU01oSW0rUGozbnp4YTN1d3hnCmJuT29pSkFxTGVhbHBaajkrUjBOY0IyVnFxNzZyTVpQN1RaMHNreE5YMjR1d2VsTmZIeHBUSXIrVnp6Nkd0czQKcGJkUmpsV0o5ZXFKelp2NTVpL01tOStHTHlVMjV3R2ZzUGRSK3M0elpNL2Fmbm9TTDA5NSszY0svalBBK0pZWQptN2tjSEhRTC9HcDJMU1F5RnpIN1M1UnNkeGdVYm1kL084UENTUmtiYk9heVo0Qi9VdC9OdFcwaW9rZERPQ2drCjNZdnQyNUVNUlpoc1dSazAra2hqUlhLbHNiQnR6TFhmNWdxSFN2VlZTSGpQQlFYbXdzMDJLZFhCWk1xWWZLM2kKaWhjVkFnTUJBQUdqSXpBaE1BNEdBMVVkRHdFQi93UUVBd0lBQVRBUEJnTlZIUk1CQWY4RUJUQURBUUgvTUEwRwpDU3FHU0liM0RRRUJDd1VBQTRJQ0FRQWN4UWtaRk5sTnJWdU5PMDFiSEtIalFVZ0lZQkpuNjNrZ3JZcWtNSWhBCk9MU2lpeU5FYjVTVVp2dnNJbTRreUxDSWM4Uk9RWTduOFZpNllWaXVuMTZidDhoaHVhcVl1MzlTN2k4dVZnb0YKZDk4MjFHKzhReCs2eGloMlJSdFMxaXUzSit5Z3FMYVk4VnJxWFp3WmxjKyt5RW5Eak1ERjk3L1FPY2xBd2M4bQpYTGdpRFBnakVHZGpIQXE4R2JadUlEV25jSmRqRnIvSUtvcmFRSDhaODlvTjUvWjZhc3RDRUY3ZlpDUzdlcyswCkI3bjRaTlVLK0M4L0tVdjdmOTA1MkJqUEdoQTI2dmxPSUdvS1FpcXhub1VJdit4cC9ySmdHU3NEZzJxL2dWeW8KWVlqdE9kQnFqYnZOWm5Qa2dYVUN3NUgyNC9nbFpWNGhweGdYRVIrK1Y3QUYyQURCZnh0ci9KOE1mcnFxK0hoUQpnYnYvaitRaktub1JZbFJLdXJyZFBhcHJpNHZLeHd5bklUREREZ0VzRmUrYTVQdzA3SW5rSVpqYUhIUWRrNUc5CkFSQ21hcHZkd2JWNHpyRVNtM1RkODh2d0ZWSzhlOWpXVXhJbC81WE9YRzlUT2pwRGdXUTNEM1lFRm1zVEc3SHMKb291Y0pqTkFsZndkR3o0MFVnZmdoeXRxZHVGRUhwNTk4KzUxSHhLclkwR0VWclEwLzA2TWNRbFl1TXM5RU0zWgpBZkozWFB4YmIyRjJBdnBZYzdtcWtaNFFTaHA0WnNyZU4xQnpxam5Vd0JId25ucmFFMkMwVGdYQXR3ck43YTBqCkVpZzJDV0RFMi8rVEYzMnRMbms2eXl5ZzEzc2p0YmhreWdsRGQ5UG9qSi9DRWQ3WW5uQXV3SW1LNVJoSHB3MFUKeEE9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+              tls.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlKSndJQkFBS0NBZ0VBcWpQSm9leDc5YWpaYnlTYVRNMHVPbHNBTFNBSVdZTVZwZ2QzSGlUMlVuSlE3ZVIwCnd3MFBBK0dDRXp1K2laeVYveUtzTUgvUmxRMHhFRmxIeVpRUVJoN3VEZU5IOGxKU2I2Mi9NcFcvZXhGc2FNYnQKUTlXb3JaVG9tZmRQS2s0YTdXVXBMWDhtbUV6SDA5c1l4bk1pRGdIL3c4TFJkaVJMamtJcjN4bFVHWFlqdWtMRgo5VkxOUjk5VHNYMFNGQkFpMTdzSkpnTFEvaW41bXFrMWZGRnYxcWpCNlloRnprbTNOT1dSWndDd1F0YUhoblovCmpyMWNoSkJRL1BrOWw1OSt5UEVVQ0tqQWNRN3F2T0NWQUF5YTQxaGhIV3hBd2VMNi9meU9Bd1c5cDV5WDJzUCsKNEJkYmM5Rjd0aklpcmlJOTlMdkN6Mm5aSlNZQlVBVFljdkxnZzBjQjh1d2ltYWRMdm04R0xodG5CMG45b25keQppeittZVExTmtQbmxIN2FSdTlwRWg2OHRSeGgxYVVIZ1FWTkdCSXlFaWI0K1BlZlBGcmU3REdCdWM2aUlrQ290CjVxV2xtUDM1SFExd0haV3FydnFzeGsvdE5uU3lURTFmYmk3QjZVMThmR2xNaXY1WFBQb2EyemlsdDFHT1ZZbjEKNm9uTm0vbm1MOHliMzRZdkpUYm5BWit3OTFINnpqTmt6OXArZWhJdlQzbjdkd3IrTThENGxoaWJ1UndjZEF2OAphbll0SkRJWE1mdExsR3gzR0JSdVozODd3OEpKR1J0czVySm5nSDlTMzgyMWJTS2lSME00S0NUZGkrM2JrUXhGCm1HeFpHVFQ2U0dORmNxV3hzRzNNdGQvbUNvZEs5VlZJZU04RkJlYkN6VFlwMWNGa3lwaDhyZUtLRnhVQ0F3RUEKQVFLQ0FnQTdFZGdqdTJoV0hQREJrd2wrS0NPb0d4Y1hraXR6clh2ZzhHeFY2T3dZTnhhQlNhMkFXRkxpdk93Zwo4cll4R2tnd2tQOERvZ2pCMng4eEZsdEV5WDlRWnNHbHprQ1ZDQjhXSlUzYkozK2FIYlRyTkViNktQZnVybVIvCnN3WWxuNC9XM2lvSllUeXExTkx4WXZQWlEvSUl2SWJna1FlVElndWE1cnBGSm93NmZmYnVXT2hOT1J5SG1pbDQKeXZod1FCMW5rOEVjRVJRcGNiWHdDRlBJdnBhN0FEeTBhUmdZL1JwNVlFY3pZVmpMQ1p0bGZsRE00RWx3dElsMwpFcVZlcnZzWWtCcXMycXhYVUo4RlNFaE9DUkhrWHpMdFBEbkpVSlpkZWI1cnJCMWpRNFNzWnlOWThLSkxzdU5sCm0wYlArcEJZRktZS3lDaVZyUGY5cG9EY2ZCQ1F6amV5S1VwK3MzNVJLeXlldWlHWWJYdXB1amhEMGk3VmRaNEQKQ2pzNEVFK0V6d0NTM1BRQzhxTVEwYWZUN2lBYjBvV0RnVFNKMHR1V3pBYlZrbDRPVzhmQzVZa1VMbXpwSU5KSwpnamdPMnV5Tlh6bmU4aHRqSGNxY3RBOGxSVmRmbU4wN1pZZ3Jra1Nka1ltNFJTVGUzaCt1Z1N3QkkrRmNPWFNWCjJGNmlOQ2lLTWhYbnNGQ1h5OGJtdVdENU9BOXpzcjN2Z0l1MmY2OUxMK25QYjFXQjRWQkpYa2tBaVlIeU90MDUKbmNGbmM2bko5MG96M3NTanNpTldCYUwvbWpTS2FSTHYvaWJuTEVSdDJMck50bFM1VUFFMWwxVEJaUzRCTkNHawp3VkJHMkhLMXlaOHFqRjYvWDFDcCtvc2JRYXNGS3BjbDVBcDkzK211RkI2YVRDUDdMUUtDQVFFQXplU1dQbHNOClVwV2EzNFBFUHlPRWY4QjRMZkdaeng1d2oweFIvWVFZbit0SWhGa0NrVkZ4L3l5MTNDZG5sQlpIbDZ0dFArdXQKSkp6dU9ack03ZEM0K2FiWSs1OFMvS09LWFU1NWt4UGkzd1ZETms1NW9Kb3cxclNCREQ3TDdSRXJ4S2JFcGVXbQpvU3BtVmxVRGd2UkllWldqSjdYUlVOMTV0TC8xNlBPcGxxUUZvcHo0ODZLa0F1Qk43d3dMbElRbFdkQ0RaVUVaCkpPSEJpcTZkL3JoZkJNVytVZFd4dSt3cmYwcGpyZnJqMXkyQlFyQ0xQR0ZqSm0rT0Z6N1llYUdqczYvUzFoUG8KaW9HdEtJalVqQ2swZ0dIdnF1NTRidks3NmNRZmdJeG1YeHB5K1dNamVzeWlqR2xDS0lnKzM3dmVYWTVIUVN6cApuclBScTJ4VjFEdkRRd0tDQVFFQTA1K2dMVEZFdjNITkR3V3ZMRUE5bDQ0KzFFZllUVGRrdndWZWl2SXI5R0g3CjBtTWVsajc0TWszZmY1b1Btb1E3VE9xYUE4dzJLaTB5MFdzemJNU0JyV0luQzA2TktiNkZBMVlic0hKTXpRRjIKZkFvaGpoczlFZEpwS0ZoZHJ5OW9SZ2FZcUJGZnE5WDJFdWRVUFRGd1FDZWxnbXhmZ0ZYa0lkSkNRSjZyeXA0eQpiTG5ZaFJDUVlDdDZ3cER5THRvaDZYVmNkU0JsRmlPMUN4R2s0OEJLSEZ0T09wMDYxUWtvNkJ4aTJVQko0T1cyCjZEU0Z1empOcjRZSENiUzdteXo1MDdiWkM4U0hmd1Y4b3VOall0VUNGL2FjNStTQlB6ZEVyVllYa0hnbUIrRzIKbEdaMnAvRFB2YjRzMUlVdkJRbjdFaXFhSE9yTmJUMVkrdmUyZlhXYXh3S0NBUUF0RWQ2NW82RFU5UjdEMHNwQQpyL3V2STJpclZmbS9Wd0I0dmRJczFwKzFVZ0c3eHVoQyt6c2pDcHg4cHJ1THRSelMzSm03cGxGdWRGUEpsRk5MCnM2YnFMMVhNTHRRdkxYVjZXMVZObHNyUTJ3d05kVHcycGNvUEZkQXg2QVVuemR4dzNiaXFRQTBydG1aVWU2T2IKSlBKQWV6c04xRVVQbUl1dHYxK0xNTnRzdUZicmM4VWpQL1Q3RkRLN0l6M2RzdGVpUTN5Znk1SS9lcE90VWZBUAo5RGdJaVdqUjdSOU03YlBQMTI3ZWhNOGZLVHprWmxUMFVMVXRrcm5kNk1ubVJqWFpmYUYvYnpnMktaRElFTHZHCk9yYmRhNUxWTGdKNjl2T2ZobWtHOExUd0dKQVdlMWNtNkdpa3A5M3RsWFY5OEZnS3pyeFdUZ2lOenZzVXRWQk0KZHhDVkFvSUJBQUgwOGVnNUVtZXF4N2loMXRMVDdUM2ZoTmsxcU54ZDdNS1BiQ1pnd3VOSm5LaC9YaU1KaGdZQgpEbFlCdUs4M0ZjMUtSZzVPN3hsSXZiV09CalcxUTNXMCtLTjBJSDRJVXZhSzcwcWNZL1ZwVkEwbGt0WGJqcDhCCmtSTmNiZEZXNE9IMDRhaDhNS1JJSURSZ2l6amRvaW9WczhRVytITVpXRGl2MXdqOTdweTdCY0JYbjViclprcGQKWEk4OEErRkhCeFUvanBGT3NXQ1pCKzJJUmp3TTVTS0ovWmt4SndBZFM1R0o0YWdjbmhKRVRZS3NLYWhuaUE5ZApiK2M1RXBzR3VYQ3B1aXdQcnlrUGhlMkRxTUdiTXAvQ0dnVlM2WmNLRGNxRWgwZEF0U2xSZnZ5MFRkaVRzM2dQCnNCNXU5TlpaRjBjOXVac1cyTHR2MjhqR1RadXZZTFVDZ2dFQUcvRHRhYUpURXcxM2hKdzVNcWdjNDRnZFZlODEKeGdpY0kyQTNaUFo4VVBzWitlcTV6Tm84V3RTRXJqUHkwQU1LbDJRRkVpWW1NLzNxbDJpVFVLZXVUZHlTYnI0ZAorUWpCOEFHM04vYzJ3by9DM05vUzdleXIwY3lwdC9EUDhwaDYyc2Q2dnJBSExwNncxQjZIYVozcm9HV2xuRFI1ClByaXdDTnVxMTJDZjh6U0txZWRidDlSTXVBY3NkdUxnNENXSjRtS3hMS0J3QzltWW9RUHE1eThITS90V08zR2EKRHhRd09EUkRXTmRYSWtEay9ET2l6TE5TVVdQWi80d3J3ZGlqcTJscmt5U1JXR2ZjMFhrdFRGb3ROZDFHYmwyYQpZNGFuSW9RcVdNYUdsZGlzNzJsbzdWQnJRZEUrZ2IrV096Ym9TbElxYTdmNDlrQUdyOTRDclM2MGlBPT0KLS0tLS1FTkQgUlNBIFBSSVZBVEUgS0VZLS0tLS0K
+            kind: Secret
+            metadata:
+              labels:
+                sealedsecrets.bitnami.com/sealed-secrets-key: active
+              name: sealed-secrets-key
+              namespace: kube-system
+            type: kubernetes.io/tls
+  - name: repository-creds-addons
+    namespace: argocd
+    chart: "kubernetes-incubator/raw"
+    needs: ["kube-system/sealed-secrets-controller"]
+    version: "0.2.3"
+    wait: true
+    timeout: 120
+    cleanupOnFail: true
+    values:
+      - resources:
+          - apiVersion: bitnami.com/v1alpha1
+            kind: SealedSecret
+            metadata:
+              annotations:
+                sealedsecrets.bitnami.com/cluster-wide: "true"
+              name: repository-creds.addons
+              namespace: argocd
+            spec:
+              encryptedData:
+                password: AgAKUSUr4GRefRQ7BNcsXOlQ6u1CZUa0zXAN9XXBNI11mAQitZ4pLbpwwtlkf1Y6DYD2clGp26xeFyuAWJ2668lynWxuG8UBH6HT3+P64ovgj/5hFxicdwmPFjjUagDra+riundRSjaaFZLoSAXBvfJQPIZTom9kJMwPw8JFDza2r2P4nxH1Wz5iAb5SjCXL73S+xulme9ch6CQFr2hRQefu0r04fz9B/3yvbicbVULJV050Lm/hULbPIK3AHw8S5FVCExMH1aoiZt53PuzgZSKXCr9cfQXnd3xq9si8tbK04gMHRl8qNELE8tsvN0P+0b6uVnyAs1aY9CSXlddjSwUWILmaNcHOAvKcbUkrK/HTXOB6+eQT4XNbkbXdpXHKoMiKFdOjc7SlxI1sqE1RxlUMNFXRdBYT0lfZatJmpP5/v0YXHre+WIcZQ0ryw2tUtGyj0hLnA34JXjzkJ/S/tNYnJzqlscEPy/jNiXPBo2TUjZEHc3q9yXOx9iudT47qqLLzcH1ITmXHvmItZLt5hRrG1tX0l8lMVUrUQ7Z6TBhNclQlrZ0SmZfRqOV7zvk2xv96dO9H6TnH7+5LoyT7mnNE8uGBazgrqForiBy2QWmDtgvqIWaweVFOU6/W7kPHcT2kTU2KkivR5cujjaCOz5dImVpXY9oVR2vyQmpVVxqt1xmefVmW6wuCNNr7kRnuhvUQvS1z2eirFRhCUDHX1Qg0wvEJ/sA41Wq7kbxjTuNnylUJnX5TX3Dtjquowh+98Vvz+DiPLYj2fh015v+daQnzASYQJo/47ZryUt/Z8tZ1FnRMsD/e5wgz/AUUHDQ=
+                type: AgB6jaIvL1t5bpH77CLzQrXvwsGFe9Kh50Ak3CMvOuX5Y8M2uB65TGcgmPe128UkYZgqSYBqN1goO3gkuCf9JJdvW0aMyz/nxPbj4sDaa2uU4y0ElMiZ+W/Ff9TUU8OYVVDA9l0CkQnaWTWQMEr6WDOTXX4RJPmhWsx1e10Atct/6Z74IPhzUj8GmjZ52ACZ615nWvW5R5v5dTwx3UcXyeMRoJVvOfuIKgq5fqoFAq9dH/buGlcxaSIvpSM1Me+6a5gTXwPZHg4M00W8TfmEeZ+3/PGcrxHph7KpKIRgsYTxMZb5fbyUSnC48QLk/ry86WtKeSnYwv2oK64zo/QXULTRtbSzo6tRmBrB/GcLEHMjJbo7nmB6j7YB9EaFDOD0q5YnU+VVwOUGOwBctEKjAZGsN7GhepoPqR4YXaQt3NK9/R1ox/xUBjnhOUUp/pSLy80cD6GR5yx0kHhm9a1WSA7z1HwLXB8/WvFyYanvSemTqIpsESGCtQOsot88X0GYLAMRB5CwQPKdjWxTIT5wGkMaKkFWXbgVsxtOmAzDWUdQKNdLSfMSQgWt5ayTpVOAmlyIVQMyjSmiSvOYekizT4qwYb9n5ISCJlgxIQnPQC6KJtvcoD0qo8xuXWMc/Vx1wFiDS1fsg19kCI+TKzTF/+LLHpiLS3cKezHmJTHpJDcsya/Tr+RsTBoiy+FB0GOnU71ZX9I=
+                url: AgCP8Yz+k4Zo/vckaeaqafvDCtu4r6aUyDzRR+DhpgUolfkneLcpKbutqsRxT6YlVgJP0JiSZGY18p6ZAhOREoJ45etA69K0xuuzCn7ggg+3/O3u9hyGBdf4dQOumpCrTaBIsnft+It+uChaH0rs6o/nsu8pj3CmEO+l4Oa5qYFS4xTbInHxUajrzyL8OXxJrJ6h/zxqbKUVastoARPX1OPU978v+E8AAEXyuK27iZVjy3LUMglngKoJsX7rjxc1QTpt3oFUKQ2/9Q2dD8W7PH3Bql5xCTbi/LHm2KRjZ/CfRw4tdKkLRy856C8KfSff24QCXXVxlgoYPHJtNVPd3to2lG/AOVhTJRFryPDc6XRec2EB9LxI4lRGM1qYkjHgNSKx8hf25kDg6R1Qpsz11OErhRIjV+82Xj9H12Rn6yK5x94F2AMYQJECEHFGfdCvyrx8+rfkOWUpRZBVWHAQNQWWkmnmeRzseHIEgVVnISSpM3royfg6kcysFrSIPxoacrlZKqdbLmztSfOzdn+B8F19eV5YGy4b0aQ20NJEqcKkqpgIqpxQ4fbGFpq6fLtD1mIhC4sDs5mEGNpXRLUq8v6VlRUt3wOXSkF3+5QYKnEgEWoCZg5GO5Dh9Pi1BURlh2+LMEal+HmTU/ju917JmxEaC+zLiaTxy8r64JCErVtZkQLuhpXnu6uce3t6O/gDSNeul2kxm9v9fKoYpUuidUE9TeX/JftFklnZkEBVvTt9VEQipmNToQ4=
+                username: AgA+cEnGOnGQCa5iOsrURtAYOfvzrY257z1OrItRKNruj2komr3rIQ0u/JqpETOBsMqfy1566VwyHoIazjr4VI1t5h3nObNbhIvXnAWfPbvXH/GaXOkF7lfAs2tH/XFeyRXdy0WdklaA23n5z4E+NSZW6KGOgdJBNlOA7hWSG16nEWdMWNhUb3kObUwmlMfS/GoVCCgTkiqOYDrhOba7WCfc098WkGLflFDIYpX9H9d58915CpkqTV8nvqZDOhQ7r9SZAItbP54z2JjTl81eIKBTbPLQ90AY0KFf3colBozEkiNtRIAQyNrX3YFYU4AbuEzK8YEnDsWFW7rF9UYRmoYTNiHnAhWHdLhQ373/ktBDHpKxHFsC2sgAY14GR2QPFcqpZIhCUiR2tTTvyg7LzUrrHURbp7McP1oQK9qDxa3txW0NrxwmB2RZBoLCeDYRgBjJGm8nU8b9E2aIlC5VEQ6LIgWuDPXSLE9KNfbeKEWzzGBbGD0WQiqJ0blbP/dAobhVSO9PyuTwWr++zvZYJTfFxqSKwP6KE1pOU5N80wqeljli8p0YI8SIkTLj47RU5CFokloF3Z+5yopzjfOcOJIvfkMal0L2Thb/LuW5i83GIMP/01l96LCpm3nAmlzRaB71CN0uXNFTab7dhm5E4IO+nnbdtAk+Y4ys8tJkKs3hzF6+NLAEOMl+325IFvdKFS71tgg=
+              template:
+                data: null
+                metadata:
+                  annotations:
+                    sealedsecrets.bitnami.com/cluster-wide: "true"
+                  labels:
+                    argocd.argoproj.io/secret-type: repository
+                  name: repository-creds.addons
+                  namespace: argocd
+                type: Opaque
+  - name: repository-creds-ecr
+    namespace: argocd
+    chart: "kubernetes-incubator/raw"
+    needs: ["kube-system/sealed-secrets-controller"]
+    version: "0.2.3"
+    wait: true
+    timeout: 120
+    cleanupOnFail: true
+    values:
+      - resources:
+          - apiVersion: bitnami.com/v1alpha1
+            kind: SealedSecret
+            metadata:
+              annotations:
+                sealedsecrets.bitnami.com/cluster-wide: "true"
+              name: repository-creds.ecr
+              namespace: argocd
+            spec:
+              encryptedData:
+                password: AgAKUSUr4GRefRQ7BNcsXOlQ6u1CZUa0zXAN9XXBNI11mAQitZ4pLbpwwtlkf1Y6DYD2clGp26xeFyuAWJ2668lynWxuG8UBH6HT3+P64ovgj/5hFxicdwmPFjjUagDra+riundRSjaaFZLoSAXBvfJQPIZTom9kJMwPw8JFDza2r2P4nxH1Wz5iAb5SjCXL73S+xulme9ch6CQFr2hRQefu0r04fz9B/3yvbicbVULJV050Lm/hULbPIK3AHw8S5FVCExMH1aoiZt53PuzgZSKXCr9cfQXnd3xq9si8tbK04gMHRl8qNELE8tsvN0P+0b6uVnyAs1aY9CSXlddjSwUWILmaNcHOAvKcbUkrK/HTXOB6+eQT4XNbkbXdpXHKoMiKFdOjc7SlxI1sqE1RxlUMNFXRdBYT0lfZatJmpP5/v0YXHre+WIcZQ0ryw2tUtGyj0hLnA34JXjzkJ/S/tNYnJzqlscEPy/jNiXPBo2TUjZEHc3q9yXOx9iudT47qqLLzcH1ITmXHvmItZLt5hRrG1tX0l8lMVUrUQ7Z6TBhNclQlrZ0SmZfRqOV7zvk2xv96dO9H6TnH7+5LoyT7mnNE8uGBazgrqForiBy2QWmDtgvqIWaweVFOU6/W7kPHcT2kTU2KkivR5cujjaCOz5dImVpXY9oVR2vyQmpVVxqt1xmefVmW6wuCNNr7kRnuhvUQvS1z2eirFRhCUDHX1Qg0wvEJ/sA41Wq7kbxjTuNnylUJnX5TX3Dtjquowh+98Vvz+DiPLYj2fh015v+daQnzASYQJo/47ZryUt/Z8tZ1FnRMsD/e5wgz/AUUHDQ=
+                type: AgB6jaIvL1t5bpH77CLzQrXvwsGFe9Kh50Ak3CMvOuX5Y8M2uB65TGcgmPe128UkYZgqSYBqN1goO3gkuCf9JJdvW0aMyz/nxPbj4sDaa2uU4y0ElMiZ+W/Ff9TUU8OYVVDA9l0CkQnaWTWQMEr6WDOTXX4RJPmhWsx1e10Atct/6Z74IPhzUj8GmjZ52ACZ615nWvW5R5v5dTwx3UcXyeMRoJVvOfuIKgq5fqoFAq9dH/buGlcxaSIvpSM1Me+6a5gTXwPZHg4M00W8TfmEeZ+3/PGcrxHph7KpKIRgsYTxMZb5fbyUSnC48QLk/ry86WtKeSnYwv2oK64zo/QXULTRtbSzo6tRmBrB/GcLEHMjJbo7nmB6j7YB9EaFDOD0q5YnU+VVwOUGOwBctEKjAZGsN7GhepoPqR4YXaQt3NK9/R1ox/xUBjnhOUUp/pSLy80cD6GR5yx0kHhm9a1WSA7z1HwLXB8/WvFyYanvSemTqIpsESGCtQOsot88X0GYLAMRB5CwQPKdjWxTIT5wGkMaKkFWXbgVsxtOmAzDWUdQKNdLSfMSQgWt5ayTpVOAmlyIVQMyjSmiSvOYekizT4qwYb9n5ISCJlgxIQnPQC6KJtvcoD0qo8xuXWMc/Vx1wFiDS1fsg19kCI+TKzTF/+LLHpiLS3cKezHmJTHpJDcsya/Tr+RsTBoiy+FB0GOnU71ZX9I=
+                url: AgCP8Yz+k4Zo/vckaeaqafvDCtu4r6aUyDzRR+DhpgUolfkneLcpKbutqsRxT6YlVgJP0JiSZGY18p6ZAhOREoJ45etA69K0xuuzCn7ggg+3/O3u9hyGBdf4dQOumpCrTaBIsnft+It+uChaH0rs6o/nsu8pj3CmEO+l4Oa5qYFS4xTbInHxUajrzyL8OXxJrJ6h/zxqbKUVastoARPX1OPU978v+E8AAEXyuK27iZVjy3LUMglngKoJsX7rjxc1QTpt3oFUKQ2/9Q2dD8W7PH3Bql5xCTbi/LHm2KRjZ/CfRw4tdKkLRy856C8KfSff24QCXXVxlgoYPHJtNVPd3to2lG/AOVhTJRFryPDc6XRec2EB9LxI4lRGM1qYkjHgNSKx8hf25kDg6R1Qpsz11OErhRIjV+82Xj9H12Rn6yK5x94F2AMYQJECEHFGfdCvyrx8+rfkOWUpRZBVWHAQNQWWkmnmeRzseHIEgVVnISSpM3royfg6kcysFrSIPxoacrlZKqdbLmztSfOzdn+B8F19eV5YGy4b0aQ20NJEqcKkqpgIqpxQ4fbGFpq6fLtD1mIhC4sDs5mEGNpXRLUq8v6VlRUt3wOXSkF3+5QYKnEgEWoCZg5GO5Dh9Pi1BURlh2+LMEal+HmTU/ju917JmxEaC+zLiaTxy8r64JCErVtZkQLuhpXnu6uce3t6O/gDSNeul2kxm9v9fKoYpUuidUE9TeX/JftFklnZkEBVvTt9VEQipmNToQ4=
+                username: AgA+cEnGOnGQCa5iOsrURtAYOfvzrY257z1OrItRKNruj2komr3rIQ0u/JqpETOBsMqfy1566VwyHoIazjr4VI1t5h3nObNbhIvXnAWfPbvXH/GaXOkF7lfAs2tH/XFeyRXdy0WdklaA23n5z4E+NSZW6KGOgdJBNlOA7hWSG16nEWdMWNhUb3kObUwmlMfS/GoVCCgTkiqOYDrhOba7WCfc098WkGLflFDIYpX9H9d58915CpkqTV8nvqZDOhQ7r9SZAItbP54z2JjTl81eIKBTbPLQ90AY0KFf3colBozEkiNtRIAQyNrX3YFYU4AbuEzK8YEnDsWFW7rF9UYRmoYTNiHnAhWHdLhQ373/ktBDHpKxHFsC2sgAY14GR2QPFcqpZIhCUiR2tTTvyg7LzUrrHURbp7McP1oQK9qDxa3txW0NrxwmB2RZBoLCeDYRgBjJGm8nU8b9E2aIlC5VEQ6LIgWuDPXSLE9KNfbeKEWzzGBbGD0WQiqJ0blbP/dAobhVSO9PyuTwWr++zvZYJTfFxqSKwP6KE1pOU5N80wqeljli8p0YI8SIkTLj47RU5CFokloF3Z+5yopzjfOcOJIvfkMal0L2Thb/LuW5i83GIMP/01l96LCpm3nAmlzRaB71CN0uXNFTab7dhm5E4IO+nnbdtAk+Y4ys8tJkKs3hzF6+NLAEOMl+325IFvdKFS71tgg=
+              template:
+                data: null
+                metadata:
+                  annotations:
+                    sealedsecrets.bitnami.com/cluster-wide: "true"
+                  labels:
+                    argocd.argoproj.io/secret-type: repository
+                  name: repository-creds.ecr
+                  namespace: argocd
+                type: Opaque
