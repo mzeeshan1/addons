@@ -14,13 +14,13 @@ spec:
           - path: "bootstrap-addons/*"
   template:
     metadata:
-      name: "{{.path.basename}}"
+      name: "{{ "{{" }}.path.basename{{ "}}" }}"
     spec:
       project: addons
       source:
         repoURL: https://github.com/mzeeshan1/addons.git
         targetRevision: HEAD
-        path: "{{.path.path}}"
+        path: "{{ "{{" }}.path.path{{ "}}" }}"
         plugin:
           name: helmfile
           env:
@@ -28,7 +28,7 @@ spec:
               value: "true"
       destination:
         server: https://kubernetes.default.svc
-        namespace: "{{.path.basename}}"
+        namespace: "{{ "{{" }}.path.basename{{ "}}" }}"
       syncPolicy:
         automated:
           prune: true
