@@ -1,0 +1,69 @@
+repositories:
+  - name: kubernetes-incubator
+    url: https://charts.helm.sh/incubator
+
+releases:
+  - name: repository-creds-addons
+    namespace: argocd
+    chart: "kubernetes-incubator/raw"
+    version: "0.2.3"
+    wait: true
+    timeout: 120
+    cleanupOnFail: true
+    values:
+      - resources:
+          - apiVersion: bitnami.com/v1alpha1
+            kind: SealedSecret
+            metadata:
+              annotations:
+                sealedsecrets.bitnami.com/cluster-wide: "true"
+              name: repository-creds.addons
+              namespace: argocd
+            spec:
+              encryptedData:
+                password: AgAKUSUr4GRefRQ7BNcsXOlQ6u1CZUa0zXAN9XXBNI11mAQitZ4pLbpwwtlkf1Y6DYD2clGp26xeFyuAWJ2668lynWxuG8UBH6HT3+P64ovgj/5hFxicdwmPFjjUagDra+riundRSjaaFZLoSAXBvfJQPIZTom9kJMwPw8JFDza2r2P4nxH1Wz5iAb5SjCXL73S+xulme9ch6CQFr2hRQefu0r04fz9B/3yvbicbVULJV050Lm/hULbPIK3AHw8S5FVCExMH1aoiZt53PuzgZSKXCr9cfQXnd3xq9si8tbK04gMHRl8qNELE8tsvN0P+0b6uVnyAs1aY9CSXlddjSwUWILmaNcHOAvKcbUkrK/HTXOB6+eQT4XNbkbXdpXHKoMiKFdOjc7SlxI1sqE1RxlUMNFXRdBYT0lfZatJmpP5/v0YXHre+WIcZQ0ryw2tUtGyj0hLnA34JXjzkJ/S/tNYnJzqlscEPy/jNiXPBo2TUjZEHc3q9yXOx9iudT47qqLLzcH1ITmXHvmItZLt5hRrG1tX0l8lMVUrUQ7Z6TBhNclQlrZ0SmZfRqOV7zvk2xv96dO9H6TnH7+5LoyT7mnNE8uGBazgrqForiBy2QWmDtgvqIWaweVFOU6/W7kPHcT2kTU2KkivR5cujjaCOz5dImVpXY9oVR2vyQmpVVxqt1xmefVmW6wuCNNr7kRnuhvUQvS1z2eirFRhCUDHX1Qg0wvEJ/sA41Wq7kbxjTuNnylUJnX5TX3Dtjquowh+98Vvz+DiPLYj2fh015v+daQnzASYQJo/47ZryUt/Z8tZ1FnRMsD/e5wgz/AUUHDQ=
+                type: AgB6jaIvL1t5bpH77CLzQrXvwsGFe9Kh50Ak3CMvOuX5Y8M2uB65TGcgmPe128UkYZgqSYBqN1goO3gkuCf9JJdvW0aMyz/nxPbj4sDaa2uU4y0ElMiZ+W/Ff9TUU8OYVVDA9l0CkQnaWTWQMEr6WDOTXX4RJPmhWsx1e10Atct/6Z74IPhzUj8GmjZ52ACZ615nWvW5R5v5dTwx3UcXyeMRoJVvOfuIKgq5fqoFAq9dH/buGlcxaSIvpSM1Me+6a5gTXwPZHg4M00W8TfmEeZ+3/PGcrxHph7KpKIRgsYTxMZb5fbyUSnC48QLk/ry86WtKeSnYwv2oK64zo/QXULTRtbSzo6tRmBrB/GcLEHMjJbo7nmB6j7YB9EaFDOD0q5YnU+VVwOUGOwBctEKjAZGsN7GhepoPqR4YXaQt3NK9/R1ox/xUBjnhOUUp/pSLy80cD6GR5yx0kHhm9a1WSA7z1HwLXB8/WvFyYanvSemTqIpsESGCtQOsot88X0GYLAMRB5CwQPKdjWxTIT5wGkMaKkFWXbgVsxtOmAzDWUdQKNdLSfMSQgWt5ayTpVOAmlyIVQMyjSmiSvOYekizT4qwYb9n5ISCJlgxIQnPQC6KJtvcoD0qo8xuXWMc/Vx1wFiDS1fsg19kCI+TKzTF/+LLHpiLS3cKezHmJTHpJDcsya/Tr+RsTBoiy+FB0GOnU71ZX9I=
+                url: AgCP8Yz+k4Zo/vckaeaqafvDCtu4r6aUyDzRR+DhpgUolfkneLcpKbutqsRxT6YlVgJP0JiSZGY18p6ZAhOREoJ45etA69K0xuuzCn7ggg+3/O3u9hyGBdf4dQOumpCrTaBIsnft+It+uChaH0rs6o/nsu8pj3CmEO+l4Oa5qYFS4xTbInHxUajrzyL8OXxJrJ6h/zxqbKUVastoARPX1OPU978v+E8AAEXyuK27iZVjy3LUMglngKoJsX7rjxc1QTpt3oFUKQ2/9Q2dD8W7PH3Bql5xCTbi/LHm2KRjZ/CfRw4tdKkLRy856C8KfSff24QCXXVxlgoYPHJtNVPd3to2lG/AOVhTJRFryPDc6XRec2EB9LxI4lRGM1qYkjHgNSKx8hf25kDg6R1Qpsz11OErhRIjV+82Xj9H12Rn6yK5x94F2AMYQJECEHFGfdCvyrx8+rfkOWUpRZBVWHAQNQWWkmnmeRzseHIEgVVnISSpM3royfg6kcysFrSIPxoacrlZKqdbLmztSfOzdn+B8F19eV5YGy4b0aQ20NJEqcKkqpgIqpxQ4fbGFpq6fLtD1mIhC4sDs5mEGNpXRLUq8v6VlRUt3wOXSkF3+5QYKnEgEWoCZg5GO5Dh9Pi1BURlh2+LMEal+HmTU/ju917JmxEaC+zLiaTxy8r64JCErVtZkQLuhpXnu6uce3t6O/gDSNeul2kxm9v9fKoYpUuidUE9TeX/JftFklnZkEBVvTt9VEQipmNToQ4=
+                username: AgA+cEnGOnGQCa5iOsrURtAYOfvzrY257z1OrItRKNruj2komr3rIQ0u/JqpETOBsMqfy1566VwyHoIazjr4VI1t5h3nObNbhIvXnAWfPbvXH/GaXOkF7lfAs2tH/XFeyRXdy0WdklaA23n5z4E+NSZW6KGOgdJBNlOA7hWSG16nEWdMWNhUb3kObUwmlMfS/GoVCCgTkiqOYDrhOba7WCfc098WkGLflFDIYpX9H9d58915CpkqTV8nvqZDOhQ7r9SZAItbP54z2JjTl81eIKBTbPLQ90AY0KFf3colBozEkiNtRIAQyNrX3YFYU4AbuEzK8YEnDsWFW7rF9UYRmoYTNiHnAhWHdLhQ373/ktBDHpKxHFsC2sgAY14GR2QPFcqpZIhCUiR2tTTvyg7LzUrrHURbp7McP1oQK9qDxa3txW0NrxwmB2RZBoLCeDYRgBjJGm8nU8b9E2aIlC5VEQ6LIgWuDPXSLE9KNfbeKEWzzGBbGD0WQiqJ0blbP/dAobhVSO9PyuTwWr++zvZYJTfFxqSKwP6KE1pOU5N80wqeljli8p0YI8SIkTLj47RU5CFokloF3Z+5yopzjfOcOJIvfkMal0L2Thb/LuW5i83GIMP/01l96LCpm3nAmlzRaB71CN0uXNFTab7dhm5E4IO+nnbdtAk+Y4ys8tJkKs3hzF6+NLAEOMl+325IFvdKFS71tgg=
+              template:
+                data: null
+                metadata:
+                  annotations:
+                    sealedsecrets.bitnami.com/cluster-wide: "true"
+                  labels:
+                    argocd.argoproj.io/secret-type: repository
+                  name: repository-creds.addons
+                  namespace: argocd
+                type: Opaque
+  - name: repository-creds-ecr
+    namespace: argocd
+    chart: "kubernetes-incubator/raw"
+    version: "0.2.3"
+    wait: true
+    timeout: 120
+    cleanupOnFail: true
+    values:
+      - resources:
+          - apiVersion: bitnami.com/v1alpha1
+            kind: SealedSecret
+            metadata:
+              annotations:
+                sealedsecrets.bitnami.com/cluster-wide: "true"
+              name: repository-creds.ecr
+              namespace: argocd
+            spec:
+              encryptedData:
+                password: AgAKUSUr4GRefRQ7BNcsXOlQ6u1CZUa0zXAN9XXBNI11mAQitZ4pLbpwwtlkf1Y6DYD2clGp26xeFyuAWJ2668lynWxuG8UBH6HT3+P64ovgj/5hFxicdwmPFjjUagDra+riundRSjaaFZLoSAXBvfJQPIZTom9kJMwPw8JFDza2r2P4nxH1Wz5iAb5SjCXL73S+xulme9ch6CQFr2hRQefu0r04fz9B/3yvbicbVULJV050Lm/hULbPIK3AHw8S5FVCExMH1aoiZt53PuzgZSKXCr9cfQXnd3xq9si8tbK04gMHRl8qNELE8tsvN0P+0b6uVnyAs1aY9CSXlddjSwUWILmaNcHOAvKcbUkrK/HTXOB6+eQT4XNbkbXdpXHKoMiKFdOjc7SlxI1sqE1RxlUMNFXRdBYT0lfZatJmpP5/v0YXHre+WIcZQ0ryw2tUtGyj0hLnA34JXjzkJ/S/tNYnJzqlscEPy/jNiXPBo2TUjZEHc3q9yXOx9iudT47qqLLzcH1ITmXHvmItZLt5hRrG1tX0l8lMVUrUQ7Z6TBhNclQlrZ0SmZfRqOV7zvk2xv96dO9H6TnH7+5LoyT7mnNE8uGBazgrqForiBy2QWmDtgvqIWaweVFOU6/W7kPHcT2kTU2KkivR5cujjaCOz5dImVpXY9oVR2vyQmpVVxqt1xmefVmW6wuCNNr7kRnuhvUQvS1z2eirFRhCUDHX1Qg0wvEJ/sA41Wq7kbxjTuNnylUJnX5TX3Dtjquowh+98Vvz+DiPLYj2fh015v+daQnzASYQJo/47ZryUt/Z8tZ1FnRMsD/e5wgz/AUUHDQ=
+                type: AgB6jaIvL1t5bpH77CLzQrXvwsGFe9Kh50Ak3CMvOuX5Y8M2uB65TGcgmPe128UkYZgqSYBqN1goO3gkuCf9JJdvW0aMyz/nxPbj4sDaa2uU4y0ElMiZ+W/Ff9TUU8OYVVDA9l0CkQnaWTWQMEr6WDOTXX4RJPmhWsx1e10Atct/6Z74IPhzUj8GmjZ52ACZ615nWvW5R5v5dTwx3UcXyeMRoJVvOfuIKgq5fqoFAq9dH/buGlcxaSIvpSM1Me+6a5gTXwPZHg4M00W8TfmEeZ+3/PGcrxHph7KpKIRgsYTxMZb5fbyUSnC48QLk/ry86WtKeSnYwv2oK64zo/QXULTRtbSzo6tRmBrB/GcLEHMjJbo7nmB6j7YB9EaFDOD0q5YnU+VVwOUGOwBctEKjAZGsN7GhepoPqR4YXaQt3NK9/R1ox/xUBjnhOUUp/pSLy80cD6GR5yx0kHhm9a1WSA7z1HwLXB8/WvFyYanvSemTqIpsESGCtQOsot88X0GYLAMRB5CwQPKdjWxTIT5wGkMaKkFWXbgVsxtOmAzDWUdQKNdLSfMSQgWt5ayTpVOAmlyIVQMyjSmiSvOYekizT4qwYb9n5ISCJlgxIQnPQC6KJtvcoD0qo8xuXWMc/Vx1wFiDS1fsg19kCI+TKzTF/+LLHpiLS3cKezHmJTHpJDcsya/Tr+RsTBoiy+FB0GOnU71ZX9I=
+                url: AgCP8Yz+k4Zo/vckaeaqafvDCtu4r6aUyDzRR+DhpgUolfkneLcpKbutqsRxT6YlVgJP0JiSZGY18p6ZAhOREoJ45etA69K0xuuzCn7ggg+3/O3u9hyGBdf4dQOumpCrTaBIsnft+It+uChaH0rs6o/nsu8pj3CmEO+l4Oa5qYFS4xTbInHxUajrzyL8OXxJrJ6h/zxqbKUVastoARPX1OPU978v+E8AAEXyuK27iZVjy3LUMglngKoJsX7rjxc1QTpt3oFUKQ2/9Q2dD8W7PH3Bql5xCTbi/LHm2KRjZ/CfRw4tdKkLRy856C8KfSff24QCXXVxlgoYPHJtNVPd3to2lG/AOVhTJRFryPDc6XRec2EB9LxI4lRGM1qYkjHgNSKx8hf25kDg6R1Qpsz11OErhRIjV+82Xj9H12Rn6yK5x94F2AMYQJECEHFGfdCvyrx8+rfkOWUpRZBVWHAQNQWWkmnmeRzseHIEgVVnISSpM3royfg6kcysFrSIPxoacrlZKqdbLmztSfOzdn+B8F19eV5YGy4b0aQ20NJEqcKkqpgIqpxQ4fbGFpq6fLtD1mIhC4sDs5mEGNpXRLUq8v6VlRUt3wOXSkF3+5QYKnEgEWoCZg5GO5Dh9Pi1BURlh2+LMEal+HmTU/ju917JmxEaC+zLiaTxy8r64JCErVtZkQLuhpXnu6uce3t6O/gDSNeul2kxm9v9fKoYpUuidUE9TeX/JftFklnZkEBVvTt9VEQipmNToQ4=
+                username: AgA+cEnGOnGQCa5iOsrURtAYOfvzrY257z1OrItRKNruj2komr3rIQ0u/JqpETOBsMqfy1566VwyHoIazjr4VI1t5h3nObNbhIvXnAWfPbvXH/GaXOkF7lfAs2tH/XFeyRXdy0WdklaA23n5z4E+NSZW6KGOgdJBNlOA7hWSG16nEWdMWNhUb3kObUwmlMfS/GoVCCgTkiqOYDrhOba7WCfc098WkGLflFDIYpX9H9d58915CpkqTV8nvqZDOhQ7r9SZAItbP54z2JjTl81eIKBTbPLQ90AY0KFf3colBozEkiNtRIAQyNrX3YFYU4AbuEzK8YEnDsWFW7rF9UYRmoYTNiHnAhWHdLhQ373/ktBDHpKxHFsC2sgAY14GR2QPFcqpZIhCUiR2tTTvyg7LzUrrHURbp7McP1oQK9qDxa3txW0NrxwmB2RZBoLCeDYRgBjJGm8nU8b9E2aIlC5VEQ6LIgWuDPXSLE9KNfbeKEWzzGBbGD0WQiqJ0blbP/dAobhVSO9PyuTwWr++zvZYJTfFxqSKwP6KE1pOU5N80wqeljli8p0YI8SIkTLj47RU5CFokloF3Z+5yopzjfOcOJIvfkMal0L2Thb/LuW5i83GIMP/01l96LCpm3nAmlzRaB71CN0uXNFTab7dhm5E4IO+nnbdtAk+Y4ys8tJkKs3hzF6+NLAEOMl+325IFvdKFS71tgg=
+              template:
+                data: null
+                metadata:
+                  annotations:
+                    sealedsecrets.bitnami.com/cluster-wide: "true"
+                  labels:
+                    argocd.argoproj.io/secret-type: repository
+                  name: repository-creds.ecr
+                  namespace: argocd
+                type: Opaque

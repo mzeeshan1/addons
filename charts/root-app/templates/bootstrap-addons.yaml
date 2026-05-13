@@ -1,0 +1,37 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: bootstrap-addons
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        repoURL: https://github.com/mzeeshan1/addons.git
+        revision: HEAD
+        files:
+          - path: "bootstrap-addons/*"
+  template:
+    metadata:
+      name: "{{.path.basename}}"
+    spec:
+      project: addons
+      source:
+        repoURL: https://github.com/mzeeshan1/addons.git
+        targetRevision: HEAD
+        path: "{{.path.path}}"
+        plugin:
+          name: helmfile
+          env:
+            - name: HELMFILE_CACHE_CLEANUP
+              value: "true"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{.path.basename}}"
+      syncPolicy:
+        automated:
+          prune: true
+        syncOptions:
+          - CreateNamespace=true
+          - ApplyOutOfSyncOnly=true
