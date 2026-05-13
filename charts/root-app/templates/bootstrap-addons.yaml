@@ -10,7 +10,7 @@ spec:
     - git:
         repoURL: https://github.com/mzeeshan1/addons.git
         revision: HEAD
-        files:
+        directories:
           - path: "bootstrap-addons/*"
   template:
     metadata:
