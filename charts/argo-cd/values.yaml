@@ -15,3 +15,50 @@ argo-cd:
       tls: true
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
+  repoServer:
+    extraContainers:
+      - name: helmfile-plugin
+        command: [/var/run/argocd/argocd-cmp-server]
+        image: travisghansen/argo-cd-helmfile:latest
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+        volumeMounts:
+          - mountPath: /var/run/argocd
+            name: var-files
+          - mountPath: /home/argocd/cmp-server/plugins
+            name: plugins
+          - mountPath: /home/argocd/cmp-server/config/plugin.yaml
+            subPath: my-plugin.yaml
+            name: argocd-cmp-cm
+          - mountPath: /tmp
+            name: cmp-tmp
+    volumes:
+      - name: cmp-tmp
+        emptyDir: {}
+      - name: argocd-cmp-cm
+        configMap:
+          name: argocd-cmp-cm # must match the ConfigMap name below
+
+  configs:
+    cmpPlugins:
+      create: true
+      plugins:
+        my-plugin.yaml: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: ConfigManagementPlugin
+          metadata:
+            name: helmfile
+          spec:
+            version: v1.0
+            init:
+              command: [sh, -c]
+              args:
+                - helmfile deps
+            generate:
+              command: [sh, -c]
+              args:
+                - helmfile template --include-crds
+            discover:
+              find:
+                glob: "**/helmfile.yaml"
