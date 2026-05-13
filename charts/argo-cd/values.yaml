@@ -41,7 +41,7 @@ argo-cd:
           name: argocd-cmp-cm # must match the ConfigMap name below
 
   configs:
-    cmpPlugins:
+    cmp:
       create: true
       plugins:
         my-plugin.yaml: |
