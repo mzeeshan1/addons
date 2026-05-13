@@ -29,7 +29,7 @@ argo-cd:
           - mountPath: /home/argocd/cmp-server/plugins
             name: plugins
           - mountPath: /home/argocd/cmp-server/config/plugin.yaml
-            subPath: my-plugin.yaml
+            subPath: helmfile.yaml # chart generates keys as <pluginName>.yaml
             name: argocd-cmp-cm
           - mountPath: /tmp
             name: cmp-tmp
@@ -43,22 +43,22 @@ argo-cd:
   configs:
     cmp:
       create: true
-      plugins:
-        my-plugin.yaml: |
-          apiVersion: argoproj.io/v1alpha1
-          kind: ConfigManagementPlugin
-          metadata:
-            name: helmfile
-          spec:
-            version: v1.0
-            init:
-              command: [sh, -c]
-              args:
-                - helmfile deps
-            generate:
-              command: [sh, -c]
-              args:
-                - helmfile template --include-crds
-            discover:
-              find:
-                glob: "**/helmfile.yaml"
+    plugins:
+      helmfile:
+        apiVersion: argoproj.io/v1alpha1
+        kind: ConfigManagementPlugin
+        metadata:
+          name: helmfile
+        spec:
+          version: v1.0
+          init:
+            command: [sh, -c]
+            args:
+              - helmfile deps
+          generate:
+            command: [sh, -c]
+            args:
+              - helmfile template --include-crds
+          discover:
+            find:
+              glob: "**/helmfile.yaml"
