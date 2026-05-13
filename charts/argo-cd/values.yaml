@@ -42,16 +42,16 @@ argo-cd:
   configs:
     cmp:
       create: true
-    plugins:
-      helmfile:
-        init:
-          command: [sh, -c]
-          args:
-            - helmfile deps
-        generate:
-          command: [sh, -c]
-          args:
-            - helmfile template --include-crds
-        discover:
-          find:
-            glob: "**/helmfile.yaml"
+      plugins:
+        helmfile:
+          init:
+            command: [sh, -c]
+            args:
+              - helmfile deps
+          generate:
+            command: [sh, -c]
+            args:
+              - helmfile template --include-crds
+          discover:
+            find:
+              glob: "**/helmfile.yaml"
