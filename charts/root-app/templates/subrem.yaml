@@ -6,7 +6,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
+  project: dev
   source:
     repoURL: https://github.com/mzeeshan1/subscription-reminder.git
     path: deploy/
