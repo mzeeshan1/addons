@@ -55,15 +55,3 @@ argo-cd:
         discover:
           find:
             glob: "**/helmfile.yaml"
-  plugin.yaml:
-    apiVersion: argoproj.io/v1alpha1
-    kind: ConfigManagementPlugin
-    metadata:
-      name: helmfile
-    spec:
-      init:
-        command: ["argo-cd-helmfile.sh"]
-        args: ["init"]
-      generate:
-        command: ["argo-cd-helmfile.sh"]
-        args: ["generate"]
