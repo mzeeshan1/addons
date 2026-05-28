@@ -4,3 +4,4 @@ namespace: argo
 resources:
   - https://github.com/argoproj/argo-workflows/releases/download/v4.0.5/quick-start-minimal.yaml
   - namespace.yaml
+  - ingress.yaml
