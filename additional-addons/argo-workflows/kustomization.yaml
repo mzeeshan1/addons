@@ -1,3 +1,2 @@
 resources:
-  - https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
   - https://github.com/argoproj/argo-workflows/releases/download/v4.0.5/quick-start-minimal.yaml
