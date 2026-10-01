@@ -11,7 +11,7 @@ argo-cd:
     ingress:
       enabled: true
       ingressClassName: "nginx"
-      hostname: "argocd.emzien.click"
+      hostname: "argocd.heimbuero-test.de"
       tls: true
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt-prod
