@@ -1,0 +1,9 @@
+# Values for the upstream Crossplane chart go under its name
+crossplane: {}
+
+awsProviders:
+  version: v2.3.0
+  families:
+    - s3
+    - ec2
+    - eks

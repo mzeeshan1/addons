@@ -1,0 +1,14 @@
+{{- range .Values.awsProviders.families }}
+---
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
+metadata:
+  name: provider-aws-{{ . }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  serviceAccountTemplate:
+    metadata:
+      name: provider-aws-{{ . }}
+{{- end }}
