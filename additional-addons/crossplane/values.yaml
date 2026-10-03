@@ -2,7 +2,7 @@
 crossplane: {}
 
 awsProviders:
-  version: v2.7.0
+  version: v2.7.1
   families:
     - s3
     - ec2
