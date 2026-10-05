@@ -1,0 +1,92 @@
+vault:
+  global:
+    enabled: true
+    tlsDisable: false
+
+  injector:
+    enabled: true
+
+  server:
+    enabled: true
+
+    # Persistent storage for /vault/data
+    dataStorage:
+      enabled: true
+      size: 20Gi
+      storageClass: gp2
+
+    # Spread Vault across nodes/AZs
+    affinity: |
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: vault
+            topologyKey: kubernetes.io/hostname
+
+    extraEnvironmentVars:
+      VAULT_CACERT: /vault/userconfig/vault-tls/ca.crt
+
+    volumes:
+      - name: vault-tls
+        secret:
+          secretName: vault-tls
+          defaultMode: 420
+
+    volumeMounts:
+      - name: vault-tls
+        mountPath: /vault/userconfig/vault-tls
+        readOnly: true
+
+    standalone:
+      enabled: false
+
+    ha:
+      enabled: true
+      replicas: 3
+
+      raft:
+        enabled: true
+        setNodeId: true
+
+        config: |
+          ui = true
+
+          cluster_name = "vault"
+
+          service_registration "kubernetes" {}
+
+          listener "tcp" {
+            address         = "[::]:8200"
+            cluster_address = "[::]:8201"
+
+            tls_disable = 0
+
+            tls_cert_file = "/vault/userconfig/vault-tls/tls.crt"
+            tls_key_file  = "/vault/userconfig/vault-tls/tls.key"
+            tls_client_ca_file = "/vault/userconfig/vault-tls/ca.crt"
+          }
+
+          storage "raft" {
+            path = "/vault/data"
+
+            retry_join {
+              leader_api_addr = "https://vault-0.vault-internal:8200"
+              leader_tls_servername = "vault.zeeshan.com"
+              leader_ca_cert_file = "/vault/userconfig/vault-tls/ca.crt"
+            }
+
+            retry_join {
+              leader_api_addr = "https://vault-1.vault-internal:8200"
+              leader_tls_servername = "vault.zeeshan.com"
+              leader_ca_cert_file = "/vault/userconfig/vault-tls/ca.crt"
+            }
+
+            retry_join {
+              leader_api_addr = "https://vault-2.vault-internal:8200"
+              leader_tls_servername = "vault.zeeshan.com"
+              leader_ca_cert_file = "/vault/userconfig/vault-tls/ca.crt"
+            }
+          }
+
+          disable_mlock = true

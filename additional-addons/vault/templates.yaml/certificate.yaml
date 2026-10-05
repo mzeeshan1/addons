@@ -1,0 +1,26 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vault-tls
+  namespace: vault
+spec:
+  secretName: vault-tls
+
+  issuerRef:
+    name: aws-privateca
+    kind: AWSPCAClusterIssuer
+    group: awspca.cert-manager.io
+
+  dnsNames:
+    - vault.zeeshan.com
+    - vault
+    - vault.vault.svc
+    - vault.vault.svc.cluster.local
+    - vault-0.vault-internal
+    - vault-1.vault-internal
+    - vault-2.vault-internal
+
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
