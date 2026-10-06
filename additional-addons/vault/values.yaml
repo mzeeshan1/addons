@@ -51,6 +51,8 @@ vault:
 
         config: |
           ui = true
+          enable_unauthenticated_access = ["generate-root"]
+
 
           cluster_name = "vault"
 
