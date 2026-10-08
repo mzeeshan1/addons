@@ -1,0 +1,10 @@
+apiVersion: awspca.cert-manager.io/v1beta1
+kind: AWSPCAClusterIssuer
+metadata:
+  name: {{ .Values.clusterIssuer.name }}
+spec:
+  arn: {{ .Values.clusterIssuer.arn }}
+  region: {{ .Values.clusterIssuer.region }}
+  {{- with .Values.clusterIssuer.role }}
+  role: {{ . }}
+  {{- end }}

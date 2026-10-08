@@ -7,7 +7,7 @@ spec:
   secretName: vault-tls
 
   issuerRef:
-    name: aws-privateca
+    name: {{ .Values.clusterIssuer.name }}
     kind: AWSPCAClusterIssuer
     group: awspca.cert-manager.io
 

@@ -1,3 +1,11 @@
+clusterIssuer:
+  name: aws-privateca
+  arn: arn:aws:acm-pca:eu-central-1:261175718795:certificate-authority/c10a4734-c58d-4791-b26f-e9a9d44f97ef
+  region: eu-central-1
+  # ARN of an IAM role to assume when issuing certificates. Leave empty to use
+  # the pod identity role attached to the aws-privateca-issuer service account.
+  role: ""
+
 vault:
   global:
     enabled: true
