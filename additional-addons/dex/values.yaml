@@ -1,0 +1,56 @@
+dex:
+  config:
+    issuer: https://dex.heimbuero-test.de/dex
+
+    storage:
+      type: kubernetes
+      config:
+        inCluster: true
+
+    web:
+      http: 0.0.0.0:5556
+
+    oauth2:
+      skipApprovalScreen: true
+
+    connectors:
+      - type: google
+        id: google
+        name: Google
+        config:
+          clientID: $GOOGLE_CLIENT_ID
+          clientSecret: $GOOGLE_CLIENT_SECRET
+          redirectURI: https://dex.heimbuero-test.de/dex/callback
+          promptType: select_account
+
+    staticClients:
+      - id: kubernetes
+        name: Kubernetes
+        public: true
+        redirectURIs:
+          - http://localhost:8000
+
+  envVars:
+    - name: GOOGLE_CLIENT_ID
+      valueFrom:
+        secretKeyRef:
+          name: dex-google-oauth
+          key: client-id
+    - name: GOOGLE_CLIENT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: dex-google-oauth
+          key: client-secret
+
+  ingress:
+    enabled: true
+    className: nginx
+    hosts:
+      - host: dex.heimbuero-test.de
+        paths:
+          - path: /dex
+            pathType: Prefix
+    tls:
+      - hosts:
+          - dex.heimbuero-test.de
+        secretName: dex-tls
