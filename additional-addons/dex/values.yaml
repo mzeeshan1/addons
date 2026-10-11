@@ -35,12 +35,12 @@ dex:
       valueFrom:
         secretKeyRef:
           name: dex-google-oauth
-          key: client-id
+          key: GOOGLE_CLIENT_ID
     - name: GOOGLE_CLIENT_SECRET
       valueFrom:
         secretKeyRef:
           name: dex-google-oauth
-          key: client-secret
+          key: GOOGLE_CLIENT_SECRET
 
   ingress:
     enabled: true
