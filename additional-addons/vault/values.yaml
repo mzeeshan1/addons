@@ -32,8 +32,8 @@ vault:
                 app.kubernetes.io/name: vault
             topologyKey: kubernetes.io/hostname
 
-    extraEnvironmentVars:
-      VAULT_CACERT: /vault/userconfig/vault-tls/ca.crt
+    # extraEnvironmentVars:
+    #   VAULT_CACERT: /vault/userconfig/vault-tls/ca.crt
 
     # volumes:
     #   - name: vault-tls
