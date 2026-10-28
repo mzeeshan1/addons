@@ -35,16 +35,16 @@ vault:
     extraEnvironmentVars:
       VAULT_CACERT: /vault/userconfig/vault-tls/ca.crt
 
-    volumes:
-      - name: vault-tls
-        secret:
-          secretName: vault-tls
-          defaultMode: 420
+    # volumes:
+    #   - name: vault-tls
+    #     secret:
+    #       secretName: vault-tls
+    #       defaultMode: 420
 
-    volumeMounts:
-      - name: vault-tls
-        mountPath: /vault/userconfig/vault-tls
-        readOnly: true
+    # volumeMounts:
+    #   - name: vault-tls
+    #     mountPath: /vault/userconfig/vault-tls
+    #     readOnly: true
 
     standalone:
       enabled: false
