@@ -16,7 +16,7 @@ kube-prometheus-stack:
     enabled: true
   additionalPrometheusRulesMap: 
     optiq-alerts:
-      groupts:
+      groups:
         - name: optiq.availability
           rules:
             - alert: OptiqLoginAvailabilitySLOViolation
