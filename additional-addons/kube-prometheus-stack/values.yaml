@@ -14,53 +14,149 @@ kube-prometheus-stack:
             - grafana.heimbuero-test.de
   nodeExporter:
     enabled: true
+
   additionalPrometheusRulesMap:
-    optiq-alerts:
+    optiq-slo-burn-rate:
       groups:
-        - name: optiq.availability
+        - name: optiq.login.availability
           rules:
-            - alert: OptiqLoginAvailabilitySLOViolation
+            # Fast burn: 14.4x
+            # Long window: 1 hour
+            # Short window: 5 minutes
+            - alert: OptiqLoginHighErrorBudgetBurn
               expr: |
                 (
-                  1 -
                   (
-                    sum(rate(http_requests_total{
-                      namespace="optiq",
-                      path="/login",
-                      status=~"2..|3.."
-                    }[5m]))
-                    /
-                    sum(rate(http_requests_total{
-                      namespace="optiq",
-                      path="/login"
-                    }[5m]))
-                  )
-                ) > 0.001
-              for: 5m
+                    1 -
+                    (
+                      sum(rate(http_requests_total{
+                        namespace="optiq",
+                        path="/login",
+                        status=~"2..|3.."
+                      }[1h]))
+                      /
+                      sum(rate(http_requests_total{
+                        namespace="optiq",
+                        path="/login"
+                      }[1h]))
+                    )
+                  ) > (14.4 * 0.001)
+                )
+                and
+                (
+                  (
+                    1 -
+                    (
+                      sum(rate(http_requests_total{
+                        namespace="optiq",
+                        path="/login",
+                        status=~"2..|3.."
+                      }[5m]))
+                      /
+                      sum(rate(http_requests_total{
+                        namespace="optiq",
+                        path="/login"
+                      }[5m]))
+                    )
+                  ) > (14.4 * 0.001)
+                )
               labels:
-                severity: warning
+                severity: critical
                 service: optiq
               annotations:
-                summary: "Optiq login availability below 99.9%"
-                description: "More than 0.1% of login requests are failing over the last 5 minutes."
-        - name: optiq.latency
-          rules:
-            # Alert when P95 login latency exceeds 250ms.
-            - alert: OptiqLoginHighLatency
+                summary: "Optiq login is consuming error budget rapidly"
+                description: "Login failure ratio has exceeded 14.4x the allowed SLO burn rate over both 1h and 5m."
+
+            # Medium burn: 6x
+            # Long window: 6 hours
+            # Short window: 30 minutes
+            - alert: OptiqLoginMediumErrorBudgetBurn
               expr: |
-                histogram_quantile(
-                  0.95,
-                  sum by (le) (
-                    rate(http_request_duration_seconds_bucket{
-                      namespace="optiq",
-                      path="/login"
-                    }[5m])
-                  )
-                ) > 0.25
-              for: 5m
+                (
+                  (
+                    1 -
+                    (
+                      sum(rate(http_requests_total{
+                        namespace="optiq",
+                        path="/login",
+                        status=~"2..|3.."
+                      }[6h]))
+                      /
+                      sum(rate(http_requests_total{
+                        namespace="optiq",
+                        path="/login"
+                      }[6h]))
+                    )
+                  ) > (6 * 0.001)
+                )
+                and
+                (
+                  (
+                    1 -
+                    (
+                      sum(rate(http_requests_total{
+                        namespace="optiq",
+                        path="/login",
+                        status=~"2..|3.."
+                      }[30m]))
+                      /
+                      sum(rate(http_requests_total{
+                        namespace="optiq",
+                        path="/login"
+                      }[30m]))
+                    )
+                  ) > (6 * 0.001)
+                )
               labels:
                 severity: warning
                 service: optiq
               annotations:
-                summary: "Optiq login P95 latency is too high"
-                description: "P95 login latency has exceeded 250ms for at least 5 minutes."
+                summary: "Optiq login is consuming error budget"
+                description: "Login failure ratio has exceeded 6x the allowed SLO burn rate over both 6h and 30m."
+
+            # Slower burn: 3x
+            # Long window: 1 day
+            # Short window: 2 hours
+            - alert: OptiqLoginSlowErrorBudgetBurn
+              expr: |
+                (
+                  (
+                    1 -
+                    (
+                      sum(rate(http_requests_total{
+                        namespace="optiq",
+                        path="/login",
+                        status=~"2..|3.."
+                      }[1d]))
+                      /
+                      sum(rate(http_requests_total{
+                        namespace="optiq",
+                        path="/login"
+                      }[1d]))
+                    )
+                  ) > (3 * 0.001)
+                )
+                and
+                (
+                  (
+                    1 -
+                    (
+                      sum(rate(http_requests_total{
+                        namespace="optiq",
+                        path="/login",
+                        status=~"2..|3.."
+                      }[2h]))
+                      /
+                      sum(rate(http_requests_total{
+                        namespace="optiq",
+                        path="/login"
+                      }[2h]))
+                    )
+                  ) > (3 * 0.001)
+                )
+              labels:
+                severity: warning
+                service: optiq
+              annotations:
+                summary: "Optiq login is slowly consuming error budget"
+                description: "Login failure ratio has exceeded 3x the allowed SLO burn rate over both 1d and 2h."
