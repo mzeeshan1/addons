@@ -12,3 +12,5 @@ kube-prometheus-stack:
         - secretName: grafana-general-tls
           hosts:
             - grafana.heimbuero-test.de
+  nodeExporter:
+    enabled: true
