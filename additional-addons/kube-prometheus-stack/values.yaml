@@ -14,28 +14,28 @@ kube-prometheus-stack:
             - grafana.heimbuero-test.de
   nodeExporter:
     enabled: true
-  additionalPrometheusRulesMap: 
+  additionalPrometheusRulesMap:
     optiq-alerts:
       groups:
         - name: optiq.availability
           rules:
             - alert: OptiqLoginAvailabilitySLOViolation
               expr: |
-              (
-                1 -
                 (
-                  sum(rate(http_requests_total{
-                    namespace="optiq",
-                    path="/login",
-                    status=~"2..|3.."
-                  }[5m]))
-                  /
-                  sum(rate(http_requests_total{
-                    namespace="optiq",
-                    path="/login"
-                  }[5m]))
-                )
-              ) > 0.001
+                  1 -
+                  (
+                    sum(rate(http_requests_total{
+                      namespace="optiq",
+                      path="/login",
+                      status=~"2..|3.."
+                    }[5m]))
+                    /
+                    sum(rate(http_requests_total{
+                      namespace="optiq",
+                      path="/login"
+                    }[5m]))
+                  )
+                ) > 0.001
               for: 5m
               labels:
                 severity: warning
