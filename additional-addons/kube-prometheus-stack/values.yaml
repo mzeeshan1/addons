@@ -14,3 +14,53 @@ kube-prometheus-stack:
             - grafana.heimbuero-test.de
   nodeExporter:
     enabled: true
+  additionalPrometheusRulesMap: 
+    optiq-alerts:
+      groupts:
+        - name: optiq.availability
+          rules:
+            - alert: OptiqLoginAvailabilitySLOViolation
+              expr: |
+              (
+                1 -
+                (
+                  sum(rate(http_requests_total{
+                    namespace="optiq",
+                    path="/login",
+                    status=~"2..|3.."
+                  }[5m]))
+                  /
+                  sum(rate(http_requests_total{
+                    namespace="optiq",
+                    path="/login"
+                  }[5m]))
+                )
+              ) > 0.001
+              for: 5m
+              labels:
+                severity: warning
+                service: optiq
+              annotations:
+                summary: "Optiq login availability below 99.9%"
+                description: "More than 0.1% of login requests are failing over the last 5 minutes."
+        - name: optiq.latency
+          rules:
+            # Alert when P95 login latency exceeds 250ms.
+            - alert: OptiqLoginHighLatency
+              expr: |
+                histogram_quantile(
+                  0.95,
+                  sum by (le) (
+                    rate(http_request_duration_seconds_bucket{
+                      namespace="optiq",
+                      path="/login"
+                    }[5m])
+                  )
+                ) > 0.25
+              for: 5m
+              labels:
+                severity: warning
+                service: optiq
+              annotations:
+                summary: "Optiq login P95 latency is too high"
+                description: "P95 login latency has exceeded 250ms for at least 5 minutes."
